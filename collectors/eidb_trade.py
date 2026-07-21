@@ -55,7 +55,12 @@ def scrape_flow(driver, flow, year):
     driver.get(URLS[flow])
     WebDriverWait(driver, 30).until(
         EC.presence_of_element_located((By.XPATH, "//form//select")))
-    Select(find_control(driver, YEAR_IDS[flow])).select_by_value(str(year))
+    year_sel = Select(find_control(driver, YEAR_IDS[flow]))
+    available = [o.get_attribute("value") for o in year_sel.options
+                 if o.get_attribute("value").isdigit()]
+    if str(year) not in available:
+        year = int(max(available, key=int))  # newest FY the site offers
+    year_sel.select_by_value(str(year))
     report_sel = driver.find_elements(By.ID, REPORT_IDS[flow])
     if not report_sel:
         report_sel = [s for s in driver.find_elements(By.XPATH, "//form//select")
@@ -125,7 +130,8 @@ def collect(db_path, year, flows):
     try:
         for flow in flows:
             rows = scrape_flow(driver, flow, year)
-            print(f"  {flow} FY{year}-{year + 1}: {len(rows)} HS chapters")
+            fy = rows[0][1] if rows else year
+            print(f"  {flow} FY{fy}-{fy + 1}: {len(rows)} HS chapters")
             all_rows.extend(rows)
     finally:
         driver.quit()
@@ -135,9 +141,11 @@ def collect(db_path, year, flows):
         flow TEXT, fy_start INTEGER, hs_code TEXT, commodity TEXT,
         prev_year_usd_mn DOUBLE, cur_year_usd_mn DOUBLE, growth_pct DOUBLE,
         header TEXT, pulled_on TEXT)""")
-    con.execute(
-        "DELETE FROM eidb_chapter_trade WHERE fy_start=? AND flow IN "
-        f"({','.join(['?'] * len(flows))})", [year, *flows])
+    # rows carry the FY actually scraped (may differ from the requested year
+    # if the site didn't offer it) — replace exactly those (flow, fy) pairs
+    for f, fy in {(r[0], r[1]) for r in all_rows}:
+        con.execute(
+            "DELETE FROM eidb_chapter_trade WHERE flow=? AND fy_start=?", [f, fy])
     con.executemany(
         "INSERT INTO eidb_chapter_trade VALUES (?,?,?,?,?,?,?,?,?)",
         [(*r, date.today().isoformat()) for r in all_rows])
@@ -149,10 +157,13 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--db", default=str(Path(__file__).resolve().parent.parent
                                         / "data" / "trade.duckdb"))
-    ap.add_argument("--year", type=int, default=2024,
-                    help="FY start year (2024 = FY 2024-25)")
+    ap.add_argument("--year", type=int, default=None,
+                    help="FY start year (2024 = FY 2024-25); default = current FY")
     ap.add_argument("--flow", choices=["exports", "imports", "both"],
                     default="both")
     args = ap.parse_args()
+    if args.year is None:
+        today = date.today()
+        args.year = today.year if today.month >= 4 else today.year - 1
     flows = ["exports", "imports"] if args.flow == "both" else [args.flow]
     collect(args.db, args.year, flows)
