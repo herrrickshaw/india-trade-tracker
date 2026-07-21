@@ -1,0 +1,5 @@
+*.duckdb
+__pycache__/
+*.pyc
+collect.log
+.DS_Store
