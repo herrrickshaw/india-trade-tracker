@@ -1,0 +1,8 @@
+name: quality
+on: [push, pull_request]
+
+jobs:
+  quality:
+    uses: herrrickshaw/.github/.github/workflows/quality.yml@main
+    with:
+      python: "false"   # TODO flip to "true" after ruff cleanup pass
