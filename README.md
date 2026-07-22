@@ -1,5 +1,7 @@
 # india-trade-tracker
 
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/herrrickshaw/india-trade-tracker/blob/main/notebooks/colab_test.ipynb)
+
 India merchandise trade tracking from the official DGFT/Department of Commerce
 **Export-Import Data Bank (EIDB)** plus a World Bank trade indicator panel.
 A free alternative to commercial trade-data vendors (Volza, Export Genius) at
