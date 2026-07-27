@@ -2,3 +2,5 @@ __pycache__/
 *.pyc
 collect.log
 .DS_Store
+graphify-out/
+.pytest_cache/
