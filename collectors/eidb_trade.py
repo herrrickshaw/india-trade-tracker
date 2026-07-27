@@ -106,12 +106,10 @@ def scrape_flow(driver, flow, year):
         before = len(seen)
         nxt[0].click()
         time.sleep(2)
-        if len(seen) == before and not driver.find_elements(
-                By.XPATH, "//table//tr[position()>1]/td"):
-            break
         if len(rows) > 5000:  # safety
             break
-        # stop if pagination stopped adding rows
+        # stop if a page turn added no new rows (broad guard; subsumes the
+        # narrower no-rows-present case, so no separate check is needed).
         if len(seen) == before:
             break
     return rows

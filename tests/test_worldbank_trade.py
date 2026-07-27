@@ -136,3 +136,19 @@ def test_collect_is_idempotent(mocked_api, tmp_path):
     count = con.execute("SELECT COUNT(*) FROM worldbank_trade").fetchone()[0]
     con.close()
     assert count == mocked_api   # still one row per (country, indicator), not doubled
+
+
+def test_get_json_does_not_swallow_programming_errors(monkeypatch):
+    """A non-network error (e.g. TypeError) must propagate immediately, not be
+    retried and hidden — get_json now catches only network/parse exceptions."""
+    calls = {"n": 0}
+
+    def boom(*a, **k):
+        calls["n"] += 1
+        raise TypeError("bug in caller, not a network failure")
+
+    monkeypatch.setattr(wb.urllib.request, "urlopen", boom)
+    monkeypatch.setattr(wb.time, "sleep", lambda *_: None)
+    with pytest.raises(TypeError):
+        wb.get_json("http://x", retries=5)
+    assert calls["n"] == 1        # raised on first attempt, no retry loop

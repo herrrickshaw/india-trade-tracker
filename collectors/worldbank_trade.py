@@ -10,6 +10,7 @@ Usage:  python3 collectors/worldbank_trade.py [--db data/trade.duckdb]
 import argparse
 import json
 import time
+import urllib.error
 import urllib.request
 from pathlib import Path
 
@@ -39,7 +40,10 @@ def get_json(url, retries=3):
                 urllib.request.Request(url, headers=UA), timeout=30
             ) as r:
                 return json.load(r)
-        except Exception:
+        except (urllib.error.URLError, TimeoutError, ConnectionError,
+                json.JSONDecodeError):
+            # Only retry genuine network/parse failures — let programming
+            # errors (TypeError, etc.) surface instead of hiding behind retries.
             if i == retries - 1:
                 raise
             time.sleep(2 * (i + 1))
