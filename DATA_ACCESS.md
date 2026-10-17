@@ -15,6 +15,8 @@
 
 1.1 MB — DGFT EIDB extracts (Livewire is Selenium-only); monthly cron on the 15th re-collects.
 
+Three keyless HTTP collectors (verified 2026-10-17) need no browser: `niryat_bilateral.py` and `niryat_hs8.py` (niryat.gov.in `/public/country/*` JSON, `curl -k` equivalent) and `comtrade_chapters.py` (UN Comtrade preview endpoint, one period per call, ~3 s between calls). Re-run to rebuild the tables in `data/trade.duckdb`; small CSV snapshots are in `data/`.
+
 ## Account-wide context
 
 - Full pointer inventory, dedup plan and audit tooling:

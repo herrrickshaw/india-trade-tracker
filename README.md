@@ -17,6 +17,9 @@ HS-chapter granularity.
 |---|---|---|---|
 | `collectors/eidb_trade.py` | [tradestat.commerce.gov.in/eidb](https://tradestat.commerce.gov.in/eidb/) | Chapter-wise (2-digit HS) annual exports & imports, US$ million, current + previous FY with growth % | Monthly (DoC updates with ~2-month lag) |
 | `collectors/worldbank_trade.py` | [World Bank API](https://api.worldbank.org/v2) | 10 trade/FDI/exchange indicators × 8 countries (IN CN US DE JP KR VN BD), 1960–present | Annual series; re-pull monthly |
+| `collectors/niryat_bilateral.py` | [NIRYAT/TIA portal](https://niryat.gov.in) `bilateralMonthlyDataPublic` (open JSON; TLS cert mismatch so verification disabled) | Exports/imports/balance, US$ mn, yearly (calendar) + monthly for latest year, 16 partner countries | Monthly (~2-month lag) |
+| `collectors/niryat_hs8.py` | NIRYAT `getIndiaSupplyDataPublic` (open JSON) | HS8 exports and imports by partner (CHE ARE USA DEU JPN), one FY, US$ mn; reconciles to TradeStat | Monthly |
+| `collectors/comtrade_chapters.py` | [UN Comtrade public preview API](https://comtradeapi.un.org/public/v1/preview) (no key, 500-row / 1-period cap) | India world-total exports & imports by HS chapter, US$, 2020-2024 (India-reported) | Annual |
 
 ## Why Selenium for EIDB
 
@@ -33,6 +36,9 @@ pip install -r requirements.txt      # needs Google Chrome installed
 python3 collectors/eidb_trade.py --year 2024          # FY 2024-25, both flows
 python3 collectors/eidb_trade.py --year 2025 --flow exports
 python3 collectors/worldbank_trade.py
+python3 collectors/niryat_bilateral.py            # no Chrome needed
+python3 collectors/niryat_hs8.py --finyear 2025-26
+python3 collectors/comtrade_chapters.py --years 2022 2023 2024
 ```
 
 Both write to `data/trade.duckdb` (gitignored). CSV snapshots of each table
@@ -42,6 +48,12 @@ are committed under `data/` for reference.
 
 - `eidb_chapter_trade(flow, fy_start, hs_code, commodity, prev_year_usd_mn, cur_year_usd_mn, growth_pct, header, pulled_on)`
 - `worldbank_trade(country, indicator_code, indicator, year, value, source_last_updated)`
+- `niryat_bilateral(country, period_type, period, exports_usd_mn, imports_usd_mn, balance_usd_mn)`
+- `niryat_hs8(country, flow, finyear, hs8, description, value_usd_mn)`
+- `comtrade_india_chapters(year, flow, hs_chapter, value_usd, net_weight_kg)`
+
+Sources checked and not used: WTO Timeseries API (HTTP 401, needs a subscription
+key) and UNCTADstat bulk download (HTTP 403 to scripted clients).
 
 ## Roadmap
 
