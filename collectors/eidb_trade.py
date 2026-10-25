@@ -84,11 +84,16 @@ def scrape_flow(driver, flow, year):
 
     rows, seen = [], set()
     while True:
+        # (//table//tr)[1] is the document's first row; the unparenthesised
+        # //table//tr[1] matched the first row of thead AND tbody AND tfoot,
+        # which garbled the header and (with position()>1) dropped HS 01.
         header = [c.text.strip() for c in driver.find_elements(
-            By.XPATH, "//table//tr[1]/th | //table//tr[1]/td")]
-        for tr in driver.find_elements(By.XPATH, "//table//tr[position()>1]"):
+            By.XPATH, "(//table//tr)[1]/th | (//table//tr)[1]/td")]
+        for tr in driver.find_elements(By.XPATH, "//table//tr[td]"):
             cells = [c.text.strip() for c in tr.find_elements(By.XPATH, "./td")]
-            if len(cells) < 4 or not cells[1]:
+            # data rows carry a numeric HS code; skips the colspan'd
+            # "India's Total Export" footer and any header-like rows
+            if len(cells) < 4 or not cells[1].isdigit():
                 continue
             key = (cells[1], cells[2])
             if key in seen:
