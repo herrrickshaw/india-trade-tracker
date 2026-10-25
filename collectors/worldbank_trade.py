@@ -71,6 +71,10 @@ def collect(db_path):
             time.sleep(0.3)
         print(f"  {iso}: done ({len(rows)} rows cumulative)")
 
+    if not rows:
+        print("worldbank_trade: no observations fetched -- table left unchanged")
+        return
+
     con = duckdb.connect(str(db_path))
     con.execute("""CREATE OR REPLACE TABLE worldbank_trade (
         country TEXT, indicator_code TEXT, indicator TEXT,
