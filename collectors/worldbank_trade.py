@@ -113,7 +113,7 @@ def get_json(url: str, retries: int = DEFAULT_RETRIES) -> Any:
 
 
 def fetch_indicator(iso: str, code: str, name: str,
-                    fetch: Optional[Fetch] = None) -> List[Row]:
+                    fetch: Fetch | None = None) -> List[Row]:
     """All pages of one country/indicator series."""
     fetch = fetch or get_json
     rows: List[Row] = []
@@ -129,7 +129,7 @@ def fetch_indicator(iso: str, code: str, name: str,
 
 def fetch_panel(countries: Sequence[str] = COUNTRIES,
                 indicators: Mapping[str, str] = INDICATORS,
-                fetch: Optional[Fetch] = None) -> List[Row]:
+                fetch: Fetch | None = None) -> List[Row]:
     """Every (country, indicator) series, with a politeness pause between calls."""
     rows: List[Row] = []
     for iso in countries:
@@ -154,14 +154,14 @@ def write_rows(db_path, rows: Sequence[Row]) -> None:
         con.close()
 
 
-def collect(db_path, fetch: Optional[Fetch] = None) -> None:
+def collect(db_path, fetch: Fetch | None = None) -> None:
     """Pull the full panel and rebuild the DuckDB table at ``db_path``."""
     rows = fetch_panel(fetch=fetch)
     write_rows(db_path, rows)
     log.info("%s: %s rows -> %s", TABLE_NAME, f"{len(rows):,}", db_path)
 
 
-def main(argv: Optional[Sequence[str]] = None) -> None:
+def main(argv: Sequence[str] | None = None) -> None:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--db", default=str(DEFAULT_DB))
     args = ap.parse_args(argv)

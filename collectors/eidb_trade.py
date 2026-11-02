@@ -77,7 +77,7 @@ _MIN_CELLS = 4
 
 # --------------------------------------------------------------------------- pure
 
-def _num(s: Optional[str]) -> Optional[float]:
+def _num(s: str | None) -> float | None:
     """Parse a comma-grouped number ('1,234.5') to float; None if not numeric."""
     try:
         return float(s.replace(",", ""))
@@ -92,7 +92,7 @@ def resolve_year(available: Sequence[str], year: int) -> int:
     return int(max(available, key=int))
 
 
-def pick_length_option(values: Iterable[str]) -> Optional[str]:
+def pick_length_option(values: Iterable[str]) -> str | None:
     """Choose the DataTables page-length option showing the most rows.
 
     '-1' (All) wins when present; otherwise the largest numeric option.
@@ -103,7 +103,7 @@ def pick_length_option(values: Iterable[str]) -> Optional[str]:
     return max((v for v in values if v.lstrip("-").isdigit()), key=int, default=None)
 
 
-def parse_row(cells: Sequence[str], flow: str, year: int, header: str) -> Optional[Row]:
+def parse_row(cells: Sequence[str], flow: str, year: int, header: str) -> Row | None:
     """Map one results-table row (cell texts) to a Row; None if not a data row."""
     if len(cells) < _MIN_CELLS or not cells[_COL_HS_CODE]:
         return None
@@ -241,7 +241,7 @@ def scrape_flow(driver, flow: str, year: int) -> List[Row]:
 
 # -------------------------------------------------------------------------- write
 
-def write_rows(db_path, rows: Sequence[Row], pulled_on: Optional[str] = None) -> None:
+def write_rows(db_path, rows: Sequence[Row], pulled_on: str | None = None) -> None:
     """Upsert rows into DuckDB, replacing exactly the (flow, fy_start) pairs present."""
     pulled_on = pulled_on or date.today().isoformat()
     con = duckdb.connect(str(db_path))
@@ -263,7 +263,7 @@ def write_rows(db_path, rows: Sequence[Row], pulled_on: Optional[str] = None) ->
 
 
 def collect(db_path, year: int, flows: Sequence[str],
-            driver_factory: Optional[Callable[[], object]] = None) -> None:
+            driver_factory: Callable[[], object] | None = None) -> None:
     """Scrape every flow in ``flows`` for ``year`` and write to ``db_path``."""
     driver = (driver_factory or make_driver)()
     all_rows: List[Row] = []
@@ -280,7 +280,7 @@ def collect(db_path, year: int, flows: Sequence[str],
     log.info("%s: %s rows -> %s", TABLE_NAME, len(all_rows), db_path)
 
 
-def main(argv: Optional[Sequence[str]] = None) -> None:
+def main(argv: Sequence[str] | None = None) -> None:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--db", default=str(DEFAULT_DB))
     ap.add_argument("--year", type=int, default=None,

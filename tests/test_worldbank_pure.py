@@ -3,7 +3,6 @@ import duckdb
 
 from collectors import worldbank_trade as wb
 
-
 # --------------------------- indicator_url() ---------------------------
 
 def test_indicator_url_shape():
@@ -16,7 +15,8 @@ def test_indicator_url_shape():
 
 PAGE = [
     {"page": 1, "pages": 1, "lastupdated": "2026-01-15"},
-    [{"date": "2023", "value": 42.5}, {"date": "2022", "value": None}, {"date": "2021", "value": "7"}],
+    [{"date": "2023", "value": 42.5}, {"date": "2022", "value": None},
+     {"date": "2021", "value": "7"}],
 ]
 
 
@@ -43,7 +43,7 @@ def test_has_more_pages():
     assert wb.has_more_pages(None, 1) is False
 
 
-# --------------------------- fetch_indicator() : paging with injected fetch ---------------------------
+# --------------------------- fetch_indicator() : paging with injected fetch -------------
 
 def test_fetch_indicator_walks_all_pages(monkeypatch):
     monkeypatch.setattr(wb.time, "sleep", lambda *_: None)
@@ -72,7 +72,8 @@ def test_fetch_panel_covers_every_country_indicator_pair(monkeypatch):
 
     rows = wb.fetch_panel(["IND", "CHN"], {"A": "a", "B": "b"}, fetch=fetch)
     assert len(rows) == 4 and len(calls) == 4
-    assert {(r[0], r[1]) for r in rows} == {("IND", "A"), ("IND", "B"), ("CHN", "A"), ("CHN", "B")}
+    assert {(r[0], r[1]) for r in rows} == {
+        ("IND", "A"), ("IND", "B"), ("CHN", "A"), ("CHN", "B")}
 
 
 # --------------------------- write_rows() / main() ---------------------------

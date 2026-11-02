@@ -9,7 +9,6 @@ import duckdb
 
 from collectors import eidb_trade as eidb
 
-
 # --------------------------- resolve_year() ---------------------------
 
 def test_resolve_year_keeps_requested_year_when_offered():

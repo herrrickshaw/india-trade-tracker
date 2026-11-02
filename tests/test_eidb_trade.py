@@ -12,7 +12,6 @@ import pytest
 
 from collectors import eidb_trade as eidb
 
-
 # --------------------------- _num() : pure parser ---------------------------
 
 def test_num_parses_comma_grouped_number():
