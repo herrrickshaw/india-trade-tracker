@@ -1,2 +1,2 @@
-duckdb>=0.9
+duckdb>=2.0.0
 selenium>=4.20
