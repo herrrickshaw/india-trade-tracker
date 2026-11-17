@@ -13,7 +13,6 @@ import pytest
 
 from collectors import worldbank_trade as wb
 
-
 # --------------------------- constants: sanity ---------------------------
 
 def test_indicators_and_countries_are_nonempty():

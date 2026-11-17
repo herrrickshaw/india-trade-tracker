@@ -4,3 +4,4 @@ collect.log
 .DS_Store
 graphify-out/
 .pytest_cache/
+.venv/

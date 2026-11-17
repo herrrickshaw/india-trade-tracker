@@ -1,0 +1,25 @@
+[project]
+name = "india-trade-tracker"
+version = "0.1.0"
+description = "India merchandise trade collectors: DGFT EIDB chapter-wise exports/imports (Selenium) + World Bank trade panel, into DuckDB"
+requires-python = ">=3.9"
+dependencies = ["duckdb>=0.9", "selenium>=4.20"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0", "ruff>=0.5"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"
+extend-exclude = [".venv", "notebooks", "data", "reports"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP"]
+ignore = ["UP006", "UP035"]  # keep typing.List/Tuple aliases: py39 runtime compatibility
+
+[tool.ruff.lint.isort]
+known-first-party = ["collectors"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
