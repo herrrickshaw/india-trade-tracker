@@ -152,3 +152,19 @@ def test_get_json_does_not_swallow_programming_errors(monkeypatch):
     with pytest.raises(TypeError):
         wb.get_json("http://x", retries=5)
     assert calls["n"] == 1        # raised on first attempt, no retry loop
+
+
+def test_outage_does_not_wipe_existing_panel(mocked_api, monkeypatch, tmp_path):
+    """Error payloads for every series used to CREATE OR REPLACE the table and
+    then crash in executemany([]), leaving worldbank_trade empty."""
+    db = tmp_path / "trade.duckdb"
+    wb.collect(str(db))
+    monkeypatch.setattr(wb, "get_json", lambda url, retries=3: [{"message": "outage"}])
+    try:
+        wb.collect(str(db))
+    except Exception:
+        pass
+    con = duckdb.connect(str(db))
+    count = con.execute("SELECT COUNT(*) FROM worldbank_trade").fetchone()[0]
+    con.close()
+    assert count == mocked_api
