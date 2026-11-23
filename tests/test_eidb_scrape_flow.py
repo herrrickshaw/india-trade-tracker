@@ -155,6 +155,12 @@ def test_missing_year_falls_back_to_newest_numeric_option_and_rows_carry_it():
     assert rows[0][1] == 2024 and isinstance(rows[0][1], int)
 
 
+def test_newest_year_fallback_compares_numerically_not_lexically():
+    d = Driver(year_values=("99", "100", "9"))
+    rows = eidb.scrape_flow(d, "exports", 5)
+    assert d.year_el.selected == ["100"] and rows[0][1] == 100
+
+
 def test_imports_use_their_own_url_and_control_ids():
     d = Driver(flow="imports")
     eidb.scrape_flow(d, "imports", 2024)
@@ -199,6 +205,15 @@ def test_rows_are_mapped_stripped_and_deduplicated():
         ("exports", 2024, "04", "Exactly four", 3.0, None, None, hdr),
         ("exports", 2024, "05", "Six cells", 3.0, 4.0, None, hdr),
     ]
+
+
+def test_optional_columns_need_exactly_enough_cells():
+    page = Page([[["1", "01", "five", "3", "x"],                       # 5 cells: no col 5, no col 7
+                  ["2", "02", "six", "3", "x", "4"],                    # 6 cells: col 5 only
+                  ["3", "03", "seven", "3", "x", "4", "y"],             # 7 cells: still no col 7
+                  ["4", "04", "eight", "3", "x", "4", "y", "5"]]])      # 8 cells: col 7 present
+    rows = eidb.scrape_flow(Driver(page=page), "exports", 2024)
+    assert [r[4:7] for r in rows] == [(3.0, None, None), (3.0, 4.0, None), (3.0, 4.0, None), (3.0, 4.0, 5.0)]
 
 
 # ---------------------------------- page length selector ----------------------------------
@@ -328,6 +343,20 @@ def test_collect_prints_chapter_counts_and_scraped_fy(monkeypatch, tmp_path, cap
     assert out[2] == f"eidb_chapter_trade: 2 rows -> {db}"
     con = duckdb.connect(str(db))
     assert {r[0] for r in con.execute("SELECT DISTINCT fy_start FROM eidb_chapter_trade").fetchall()} == {2024}
+    con.close()
+
+
+def test_rerun_replaces_the_fy_actually_scraped_not_the_requested_one(monkeypatch, tmp_path):
+    class D:
+        def quit(self):
+            pass
+    monkeypatch.setattr(eidb, "make_driver", lambda: D())
+    monkeypatch.setattr(eidb, "scrape_flow", lambda d, flow, year: [(flow, 2024, "01", "A", 1.0, 2.0, 3.0, "h")])
+    db = tmp_path / "t.duckdb"
+    for _ in range(2):                       # site offers only FY2024 although 2025 was requested
+        eidb.collect(str(db), 2025, ["exports"])
+    con = duckdb.connect(str(db))
+    assert con.execute("SELECT COUNT(*) FROM eidb_chapter_trade").fetchone()[0] == 1
     con.close()
 
 
